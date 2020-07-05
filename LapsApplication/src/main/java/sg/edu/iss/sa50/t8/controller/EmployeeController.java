@@ -1,51 +1,89 @@
 package sg.edu.iss.sa50.t8.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.SessionAttribute;
+
+import sg.edu.iss.sa50.t8.model.*;
+import sg.edu.iss.sa50.t8.model.Staff;
+import sg.edu.iss.sa50.t8.service.IEmployeeService;
+import sg.edu.iss.sa50.t8.service.LeaveServiceImpl;
+import sg.edu.iss.sa50.t8.service.StaffService;
 //split to architecture design controller
 //need to discuss to shift methods to respective controllers
 @Controller
 @RequestMapping("/employee")
 public class EmployeeController {
-	@RequestMapping("/home")
-	public String home() {
-		return "home";
-	}
-	
-	//admin
-	@RequestMapping("/adminlogin")
-	public String adminLogin() {
-		return "adminlogin";
-	}
-	
-	@RequestMapping("/admin")
-	public String admin() {
-		return "admin";
-	}
-	
-	@RequestMapping("/admin-manage")
-	public String adminManage() {
-		return "admin-manage";
-	}
-	
-	@RequestMapping("/admin-blockleave")
-	public String adminBlockLeave() {
-		return "admin-blockleave";
-	}
-	
-	@RequestMapping("/admin-setblockleave")
-	public String adminSetBlockLeave() {
-		return "admin-setblockleave";
-	}
+	//move 2 login methods into LoginControllers
+	// admin
+	// rest of methods all moved into admin controller
+
 	//employee
-	@RequestMapping("/employeelogin")
-	public String employeeLogin() {
-		return "employeelogin";
+	@Autowired
+	@Qualifier("staffService")
+	protected IEmployeeService sservice;
+
+	@Autowired
+	public void setIStaffService(StaffService sservice) {
+		this.sservice = sservice;
 	}
-	
+	@Autowired
+	protected LeaveServiceImpl leaveservice;
+
+	//employee
 	@RequestMapping("/leaves")
-	public String Leaves() {
+	public String Leaves(@SessionAttribute("user") Employee emp, HttpSession session) {
+		session.setAttribute("user", ((StaffService) sservice).findById(emp.getId()));
+		
 		return "leaves";
 	}
-	
+
+	@RequestMapping("/movement-register")
+	public String movementregister(@SessionAttribute("user") Employee emp,Model model) {
+		if(!emp.getDiscriminatorValue().equals("Admin")) {
+			if(emp.getDiscriminatorValue().equals("staff")){
+				Staff staff = (Staff) emp;			
+				List<Staff> staffs = ((StaffService) sservice).findAllStaffbyManager(staff.getManager().getId());
+				List<Leaves> leaves = new ArrayList<>();
+				for(Staff s : staffs) {
+					for(Leaves l: leaveservice.findAllLeavesByStaff(s)) {
+						leaves.add(l);
+					}
+				}
+				for(Leaves l: leaveservice.findAllLeavesByStaff(staff.getManager())) {
+					leaves.add(l);
+				}
+				model.addAttribute("movelist",leaves);
+				return "movement-register";
+			}
+			if(emp.getDiscriminatorValue().equals("Manager")){
+				Manager manager = (Manager) emp;
+				List<Staff> staffs = ((StaffService) sservice).findAllStaffbyManager(manager.getId());
+				List<Leaves> leaves = new ArrayList<>();
+				for(Staff s : staffs) {
+					for(Leaves l: leaveservice.findAllLeavesByStaff(s)) {
+						leaves.add(l);
+					}
+				}
+				for(Leaves l: leaveservice.findAllLeavesByStaff(manager)) {
+					leaves.add(l);
+				}
+				model.addAttribute("movelist",leaves);
+				return "movement-register";
+			}
+
+		}
+		model.addAttribute("errorMsg","You have no access");
+		return "error";
+
+	}
 }

@@ -1,10 +1,18 @@
 package sg.edu.iss.sa50.t8.model;
+import javax.persistence.*;
 
-public class Admin extends Employee{
+@Entity
+@DiscriminatorValue("Admin")
+public class Admin extends Employee {
 
 	public Admin() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
+	
+	public Admin(String name, String email) { 
+		super(name,email);
+		super.setPassword("admin");
+        
+    }
 
 }

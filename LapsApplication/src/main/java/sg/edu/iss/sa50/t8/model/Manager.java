@@ -1,10 +1,23 @@
 package sg.edu.iss.sa50.t8.model;
 
-public class Manager extends Employee{
+import java.util.List;
 
+import javax.persistence.DiscriminatorValue;
+
+import javax.persistence.Entity;
+
+@Entity
+@DiscriminatorValue("Manager")
+public class Manager extends Staff{
+	
 	public Manager() {
 		super();
-		// TODO Auto-generated constructor stub
+	}
+	
+	public Manager(String name, String email,
+			Manager manager, 
+			long annualLeaveDays, long medicalLeaveDays) {
+		super(name,email,manager,annualLeaveDays,medicalLeaveDays);
 	}
 
 }
