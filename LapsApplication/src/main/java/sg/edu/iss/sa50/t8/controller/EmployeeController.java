@@ -1,6 +1,7 @@
 package sg.edu.iss.sa50.t8.controller;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.servlet.http.HttpSession;
@@ -9,11 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.SessionAttribute;
 
-import sg.edu.iss.sa50.t8.model.*;
+import sg.edu.iss.sa50.t8.model.Employee;
+import sg.edu.iss.sa50.t8.model.Leaves;
+import sg.edu.iss.sa50.t8.model.Manager;
 import sg.edu.iss.sa50.t8.model.Staff;
 import sg.edu.iss.sa50.t8.service.IEmployeeService;
 import sg.edu.iss.sa50.t8.service.LeaveServiceImpl;
@@ -50,7 +52,7 @@ public class EmployeeController {
 	@RequestMapping("/movement-register")
 	public String movementregister(@SessionAttribute("user") Employee emp,Model model) {
 		if(!emp.getDiscriminatorValue().equals("Admin")) {
-			if(emp.getDiscriminatorValue().equals("staff")){
+			if(emp.getDiscriminatorValue().equals("Staff")){
 				Staff staff = (Staff) emp;			
 				List<Staff> staffs = ((StaffService) sservice).findAllStaffbyManager(staff.getManager().getId());
 				List<Leaves> leaves = new ArrayList<>();
@@ -62,7 +64,7 @@ public class EmployeeController {
 				for(Leaves l: leaveservice.findAllLeavesByStaff(staff.getManager())) {
 					leaves.add(l);
 				}
-				model.addAttribute("movelist",leaves);
+				model.addAttribute("movelist",leaves.stream().sorted(Comparator.comparing(Leaves:: getStartDate).reversed()).toArray());
 				return "movement-register";
 			}
 			if(emp.getDiscriminatorValue().equals("Manager")){

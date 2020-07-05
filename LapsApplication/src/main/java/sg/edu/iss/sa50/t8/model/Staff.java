@@ -8,17 +8,19 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.Transient;
 
 @Entity
 @DiscriminatorValue("Staff")
 public class Staff extends Employee{
 
-	@ManyToOne  @JoinColumn(name="manager_id")
+	@ManyToOne(cascade={CascadeType.MERGE}) @JoinColumn(name="manager_id")
 	private Manager manager;
 
-	@OneToMany(mappedBy="staff") 
+	@OneToMany(mappedBy="staff",cascade={CascadeType.MERGE,CascadeType.REMOVE}) 
 	private List<Leaves> leaves;
+	
+	@OneToMany(mappedBy="staff",cascade={CascadeType.MERGE,CascadeType.REMOVE}) 
+	private List<Overtime> overtimes;
 
 	public Staff() {}
 

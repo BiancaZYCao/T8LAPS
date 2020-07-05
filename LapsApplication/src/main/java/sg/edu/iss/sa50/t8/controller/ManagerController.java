@@ -20,9 +20,16 @@ import org.springframework.web.bind.annotation.SessionAttribute;
 
 import com.sun.el.parser.ParseException;
 
-import sg.edu.iss.sa50.t8.model.*;
+import sg.edu.iss.sa50.t8.model.AnnualLeave;
+import sg.edu.iss.sa50.t8.model.CompensationLeave;
+import sg.edu.iss.sa50.t8.model.Employee;
+import sg.edu.iss.sa50.t8.model.Leaves;
+import sg.edu.iss.sa50.t8.model.Manager;
+import sg.edu.iss.sa50.t8.model.MedicalLeave;
+import sg.edu.iss.sa50.t8.model.Overtime;
+import sg.edu.iss.sa50.t8.model.OvertimeStatus;
+import sg.edu.iss.sa50.t8.model.Staff;
 import sg.edu.iss.sa50.t8.repository.BlockedLeavesRepository;
-import sg.edu.iss.sa50.t8.service.AdminService;
 import sg.edu.iss.sa50.t8.service.EmailService;
 import sg.edu.iss.sa50.t8.service.ILeaveService;
 import sg.edu.iss.sa50.t8.service.LeaveServiceImpl;
@@ -119,7 +126,7 @@ public class ManagerController {
 				session.setAttribute("leavesId", id);
 				model.addAttribute("leaves", l);
 				model.addAttribute("leaves", l);
-				List<Leaves> matesLeavesList = ((ManagerService) manService).findAllSubLeavesByPeriod(l, man);
+				List<Leaves> matesLeavesList = ((ManagerService) manService).findAllSubLeavesByPeriod2(l, man);
 				model.addAttribute("MatesLeaves", matesLeavesList);
 				return "manager-leaveAppDetails";
 			}
@@ -178,7 +185,7 @@ public class ManagerController {
 			//if (medical leave) return actualLeaveDays
 			if (leaves.getDiscriminatorValue().equals("Medical Leave")) {
 				MedicalLeave lcast = (MedicalLeave) leaves;
-				long actualdays = duration(lcast.getStartDate(),lcast.getEndDate());
+				long actualdays = ActualLeaveDays(lcast.getStartDate(),lcast.getEndDate());
 				//add actualleavedays back into database this staff currentLeaveDays;
 				System.out.println("rejecting AnnualLeave Application: add balance back" + actualdays);
 				long currBalance = leaveService.findMedAnnLeave(lcast.getStaff().getId());

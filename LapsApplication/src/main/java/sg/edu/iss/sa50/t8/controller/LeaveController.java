@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-import javax.mail.Session;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.SessionAttribute;
 import com.sun.el.parser.ParseException;
 
 import sg.edu.iss.sa50.t8.model.AnnualLeave;
-import sg.edu.iss.sa50.t8.model.BlockedLeaves;
 import sg.edu.iss.sa50.t8.model.CompensationLeave;
 import sg.edu.iss.sa50.t8.model.Employee;
 import sg.edu.iss.sa50.t8.model.LeaveStatus;
@@ -33,7 +31,6 @@ import sg.edu.iss.sa50.t8.model.MedicalLeave;
 import sg.edu.iss.sa50.t8.model.Staff;
 import sg.edu.iss.sa50.t8.repository.BlockedLeavesRepository;
 import sg.edu.iss.sa50.t8.repository.StaffRepository;
-import sg.edu.iss.sa50.t8.service.AdminService;
 import sg.edu.iss.sa50.t8.service.EmailService;
 import sg.edu.iss.sa50.t8.service.IEmployeeService;
 import sg.edu.iss.sa50.t8.service.ILeaveService;
@@ -50,7 +47,7 @@ public class LeaveController {
 	@Autowired
 	@Qualifier("staffService")
 	protected IEmployeeService stService;
-	
+
 	@Autowired
 	public void setIEmployeeService(StaffService stService) {
 		this.stService = stService;
@@ -131,7 +128,7 @@ public class LeaveController {
 	@RequestMapping("/annual/save")
 	public String saveAnnualForm(@ModelAttribute("annualLeave") @Valid AnnualLeave annualLeave,
 			BindingResult bindingResult, Model model, @SessionAttribute("user") Employee emp)
-			throws ParseException, java.text.ParseException {
+					throws ParseException, java.text.ParseException {
 
 		long curAnn = leaveService.findCurAnnLeave(emp.getId());
 		model.addAttribute("eCurAnnLeave", curAnn);
@@ -141,16 +138,16 @@ public class LeaveController {
 
 		Date d1 = annualLeave.getStartDate();
 		Date d2 = annualLeave.getEndDate();
-		if (!d1.after(new Date())) {
-			model.addAttribute("errorDate", "Start Date must be future date.");
-			model.addAttribute("annualLeave", annualLeave);
-			return "leaves-apply-annual";
-		}
-		if (!d2.after(new Date())) {
-			model.addAttribute("errorEndDate", "End Date must be future date.");
-			model.addAttribute("annualLeave", annualLeave);
-			return "leaves-apply-annual";
-		}
+//		if (!d1.after(new Date())) {
+//			model.addAttribute("errorDate", "Start Date must be future date.");
+//			model.addAttribute("annualLeave", annualLeave);
+//			return "leaves-apply-annual";
+//		}
+//		if (!d2.after(new Date())) {
+//			model.addAttribute("errorEndDate", "End Date must be future date.");
+//			model.addAttribute("annualLeave", annualLeave);
+//			return "leaves-apply-annual";
+//		}
 		long duration = duration(d1, d2);
 		int satsunCount = saturdaysundaycount(d1, d2);
 		long actualleavesdays = ActualLeaveDays(d1, d2);
@@ -164,14 +161,14 @@ public class LeaveController {
 		for(AnnualLeave a : al) {
 			if(annualLeave.getStatus().equals(LeaveStatus.Applied) || 
 					annualLeave.getStatus().equals(LeaveStatus.Approved)) {
-			Date oldd1 = a.getStartDate();
-			Date oldd2 = a.getEndDate();
-			List<Date> olddates = getDatesBetweenUsingJava7(oldd1, oldd2);
-			for(Date d : olddates) {
-				Calendar c4 = Calendar.getInstance();
-				c4.setTime(d);
-				System.out.println(d);					
-				Calendar c3 = Calendar.getInstance();
+				Date oldd1 = a.getStartDate();
+				Date oldd2 = a.getEndDate();
+				List<Date> olddates = getDatesBetweenUsingJava7(oldd1, oldd2);
+				for(Date d : olddates) {
+					Calendar c4 = Calendar.getInstance();
+					c4.setTime(d);
+					System.out.println(d);					
+					Calendar c3 = Calendar.getInstance();
 					c3.setTime(annualLeave.getStartDate());				
 					if (c3.get(Calendar.YEAR) == c4.get(Calendar.YEAR)) {
 						if (c3.get(Calendar.MONTH) == c4.get(Calendar.MONTH)) {
@@ -182,23 +179,23 @@ public class LeaveController {
 							}
 						}
 					}
-				
-			}}
+
+				}}
 		}
 		if (annualLeave.getStatus().equals(LeaveStatus.Applied) && existingDays >= actualleavesdays
 				&& startDateBeforeEndDate == true) {
 			if (duration <= 14) {
 				long weekendExclude = duration - satsunCount;
 				leaveService.updateCurAnnLeaveDate(emp.getId(), existingDays - weekendExclude);
-	        	ems.notifyManager(annualLeave);
-	        	ems.notifyStaff(annualLeave);
+				ems.notifyManager(annualLeave);
+				ems.notifyStaff(annualLeave);
 				leaveService.saveAnnualLeave(annualLeave);
 				model.addAttribute("Leaves", leaveService.findAllLeaves(emp.getId()));
 				return "leaves-history";
 			} else {
 				leaveService.updateCurAnnLeaveDate(emp.getId(), existingDays - actualleavesdays);
-        	ems.notifyManager(annualLeave);
-        	ems.notifyStaff(annualLeave);
+				ems.notifyManager(annualLeave);
+				ems.notifyStaff(annualLeave);
 				leaveService.saveAnnualLeave(annualLeave);
 				model.addAttribute("Leaves", leaveService.findAllLeaves(emp.getId()));
 				return "leaves-history";
@@ -207,19 +204,19 @@ public class LeaveController {
 			model.addAttribute("error1", "You have not enough eligible leave days to apply this.");
 			return "leaves-apply-annual";
 		} 
-		
+
 		else {
 			model.addAttribute("error", "Start date must be earlier than end date.");
 			return "leaves-apply-annual";
 		}
-		
-		
-		}
+
+
+	}
 
 	@RequestMapping("/medical/save")
 	public String saveMedicalForm(@ModelAttribute("medicalLeave") @Valid MedicalLeave medicalLeave,
 			BindingResult bindingResult, Model model, @SessionAttribute("user") Employee emp)
-			throws ParseException, java.text.ParseException {
+					throws ParseException, java.text.ParseException {
 		long medAnn = leaveService.findMedAnnLeave(emp.getId());
 		model.addAttribute("eMedAnnLeave", medAnn);
 		if (bindingResult.hasErrors()) {
@@ -227,17 +224,17 @@ public class LeaveController {
 		}
 		Date d1 = medicalLeave.getStartDate();
 		Date d2 = medicalLeave.getEndDate();
-
-		if (!d1.after(new Date())) {
-			model.addAttribute("errorDate", "Start Date must be future date.");
-			model.addAttribute("medicalLeave", medicalLeave);
-			return "leaves-apply-medical";
-		}
-		if (!d2.after(new Date())) {
-			model.addAttribute("errorEndDate", "End Date must be future date.");
-			model.addAttribute("medicalLeave", medicalLeave);
-			return "leaves-apply-medical";
-		}
+//
+//		if (!d1.after(new Date())) {
+//			model.addAttribute("errorDate", "Start Date must be future date.");
+//			model.addAttribute("medicalLeave", medicalLeave);
+//			return "leaves-apply-medical";
+//		}
+//		if (!d2.after(new Date())) {
+//			model.addAttribute("errorEndDate", "End Date must be future date.");
+//			model.addAttribute("medicalLeave", medicalLeave);
+//			return "leaves-apply-medical";
+//		}
 
 		long duration = duration(d1, d2);
 		// long actualleavesdays = ActualLeaveDays(d1, d2);
@@ -245,19 +242,19 @@ public class LeaveController {
 		long existingDays = leaveService.findMedAnnLeave(emp.getId());
 		medicalLeave.setStaff((Staff) srepo.findById(emp.getId()).get()); // use session later
 		medicalLeave.setStatus(LeaveStatus.Applied);
-		
+
 		List<MedicalLeave> ml = leaveService.findAllMedicalLeavesByStaffId((Staff)emp);
 		for(MedicalLeave a : ml) {
 			if(medicalLeave.getStatus().equals(LeaveStatus.Applied) || 
 					medicalLeave.getStatus().equals(LeaveStatus.Approved)) {
-			Date oldd1 = a.getStartDate();
-			Date oldd2 = a.getEndDate();
-			List<Date> olddates = getDatesBetweenUsingJava7(oldd1, oldd2);
-			for(Date d : olddates) {
-				Calendar c4 = Calendar.getInstance();
-				c4.setTime(d);
-				System.out.println(d);					
-				Calendar c3 = Calendar.getInstance();
+				Date oldd1 = a.getStartDate();
+				Date oldd2 = a.getEndDate();
+				List<Date> olddates = getDatesBetweenUsingJava7(oldd1, oldd2);
+				for(Date d : olddates) {
+					Calendar c4 = Calendar.getInstance();
+					c4.setTime(d);
+					System.out.println(d);					
+					Calendar c3 = Calendar.getInstance();
 					c3.setTime(medicalLeave.getStartDate());				
 					if (c3.get(Calendar.YEAR) == c4.get(Calendar.YEAR)) {
 						if (c3.get(Calendar.MONTH) == c4.get(Calendar.MONTH)) {
@@ -268,14 +265,14 @@ public class LeaveController {
 							}
 						}
 					}
-				
-			}}
+
+				}}
 		}
 		if (medicalLeave.getStatus().equals(LeaveStatus.Applied) && existingDays >= duration
 				&& startDateBeforeEndDate == true && duration <= 60) {
 			leaveService.updateCurMedLeaveDate(emp.getId(), existingDays - duration);
-        	ems.notifyManager(medicalLeave);
-        	ems.notifyStaff(medicalLeave);
+			ems.notifyManager(medicalLeave);
+			ems.notifyStaff(medicalLeave);
 			leaveService.saveMedicalLeave(medicalLeave);
 			model.addAttribute("Leaves", leaveService.findAllLeaves(emp.getId()));
 			return "leaves-history";
@@ -308,34 +305,34 @@ public class LeaveController {
 			model.addAttribute("compensationLeave", compLeave);
 			return "leaves-apply-compensation";
 		}
-		
+
 		List<CompensationLeave> cl = leaveService.findAllCompensationLeavesByStaffId((Staff)emp);
 		for(CompensationLeave a : cl) {
 			if(compLeave.getStatus().equals(LeaveStatus.Applied) || 
 					compLeave.getStatus().equals(LeaveStatus.Approved)) {
-			Date oldd1 = a.getStartDate();
+				Date oldd1 = a.getStartDate();
 				Calendar c4 = Calendar.getInstance();
 				c4.setTime(oldd1);
 				System.out.println(oldd1);					
 				Calendar c3 = Calendar.getInstance();
-					c3.setTime(compLeave.getStartDate());				
-					if (c3.get(Calendar.YEAR) == c4.get(Calendar.YEAR)) {
-						if (c3.get(Calendar.MONTH) == c4.get(Calendar.MONTH)) {
-							if (c4.get(Calendar.DAY_OF_MONTH) == c3.get(Calendar.DAY_OF_MONTH)) {
-								if(a.getClaimQuota().equalsIgnoreCase(compLeave.getClaimQuota())) {
-									System.out.println(a.getClaimQuota());
-									model.addAttribute("errorSameQuota", "You have applied on the same Quota.");
-									model.addAttribute("compensationLeave", compLeave);
-									return "leaves-apply-compensation";
-								}
-								
+				c3.setTime(compLeave.getStartDate());				
+				if (c3.get(Calendar.YEAR) == c4.get(Calendar.YEAR)) {
+					if (c3.get(Calendar.MONTH) == c4.get(Calendar.MONTH)) {
+						if (c4.get(Calendar.DAY_OF_MONTH) == c3.get(Calendar.DAY_OF_MONTH)) {
+							if(a.getClaimQuota().equalsIgnoreCase(compLeave.getClaimQuota())) {
+								System.out.println(a.getClaimQuota());
+								model.addAttribute("errorSameQuota", "You have applied on the same Quota.");
+								model.addAttribute("compensationLeave", compLeave);
+								return "leaves-apply-compensation";
 							}
+
 						}
 					}
-				
+				}
+
 			}}
-		
-		
+
+
 		int updateHr = ((StaffService) stService).findTotalOTHoursByEmpId(emp.getId());
 		updateHr -= 4;
 		((StaffService) stService).updateTotalOTHoursByEmpId(emp.getId(), updateHr);
@@ -349,7 +346,7 @@ public class LeaveController {
 	@RequestMapping("/update/annual")
 	public String updateAnnualForm(@ModelAttribute("annualLeave") @Valid AnnualLeave annualLeave,
 			BindingResult bindingResult, Model model, @SessionAttribute("user") Employee emp)
-			throws ParseException, java.text.ParseException {
+					throws ParseException, java.text.ParseException {
 		long curAnn = leaveService.findCurAnnLeave(emp.getId());
 		model.addAttribute("eCurAnnLeave", curAnn);
 		if (bindingResult.hasErrors()) {
@@ -393,7 +390,7 @@ public class LeaveController {
 	@RequestMapping("/update/medical")
 	public String updateMedicalForm(@ModelAttribute("medicalLeave") @Valid MedicalLeave medicalLeave,
 			BindingResult bindingResult, Model model, @SessionAttribute("user") Employee emp)
-			throws ParseException, java.text.ParseException {
+					throws ParseException, java.text.ParseException {
 		long curAnn = leaveService.findMedAnnLeave(emp.getId());
 		model.addAttribute("eCurAnnLeave", curAnn);
 		if (bindingResult.hasErrors()) {
@@ -454,10 +451,11 @@ public class LeaveController {
 			if (ml.getStatus().equals(LeaveStatus.Approved)) {
 				Date d1 = ml.getStartDate();
 				Date d2 = ml.getEndDate();
-				long actualleavedays = ActualLeaveDays(d1, d2);
-				System.out.println("An Appl:" + actualleavedays);
+				long duration = duration(d1, d2);
+				//long actualleavedays = ActualLeaveDays(d1, d2);
+				System.out.println("An Appl:" + duration);
 				long existingDays = leaveService.findMedAnnLeave(ml.getStaff().getId());
-				leaveService.updateCurMedLeaveDate(ml.getStaff().getId(), actualleavedays + existingDays);
+				leaveService.updateCurMedLeaveDate(ml.getStaff().getId(), duration + existingDays);
 			}
 		} else {
 			if (l.getStatus().equals(LeaveStatus.Approved)) {
@@ -467,6 +465,14 @@ public class LeaveController {
 			}
 		}
 		leaveService.updateLeaveStatus(id, LeaveStatus.Cancelled);
+		Leaves toSave = leaveService.findLeaveById(id);
+		System.out.println(toSave.getStatus());
+
+		if(toSave.getStatus().equals(LeaveStatus.Cancelled)) {
+			System.out.println(toSave.getStatus());
+			ems.confirmStaffCancellation(toSave);
+			ems.confirmStaffCancellationToManager(toSave);
+		}
 		return "forward:/leaves/history";
 	}
 
@@ -510,10 +516,11 @@ public class LeaveController {
 			if (ml.getStatus().equals(LeaveStatus.Applied)) {
 				Date d1 = ml.getStartDate();
 				Date d2 = ml.getEndDate();
-				long actualleavedays = ActualLeaveDays(d1, d2);
-				System.out.println("An Appl:" + actualleavedays);
+				//long actualleavedays = ActualLeaveDays(d1, d2);
+				long duration = duration(d1, d2);
+				System.out.println("An Appl:" + duration);
 				long existingDays = leaveService.findMedAnnLeave(ml.getStaff().getId());
-				leaveService.updateCurMedLeaveDate(ml.getStaff().getId(), actualleavedays + existingDays);
+				leaveService.updateCurMedLeaveDate(ml.getStaff().getId(), duration + existingDays);
 			}
 		} else {
 			if (l.getStatus().equals(LeaveStatus.Applied)) {
@@ -569,6 +576,9 @@ public class LeaveController {
 			status = false;
 		} else if (d1.before(d2)) {
 			System.out.println("Date1 is before Date2");
+			status = true;
+		}
+		else if(d1.equals(d2)) {
 			status = true;
 		}
 
